@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
-use labman_server::{cli, core};
+use labman_server::{cli, core, web};
 use std::env;
 
 #[derive(Parser)]
@@ -43,12 +43,13 @@ enum Commands {
         #[arg(long, default_value = "localhost")]
         host: String,
         /// Port to bind the server to
-        #[arg(long, short, default_value_t = 8000, value_parser = clap::value_parser!(u16).range(1024..=65535))]
+        #[arg(long, default_value_t = 8000, value_parser = clap::value_parser!(u16).range(1024..=65535))]
         port: u16,
     },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args = Cli::parse();
 
     dotenv().ok();
@@ -72,8 +73,13 @@ fn main() {
         Commands::DeleteUser { name } => {
             cli::delete_user(&mut labman, name);
         }
-        Commands::Run { host: _, port: _ } => {
-            todo!("run the server")
+        Commands::Run { host, port } => {
+            let app = web::router();
+            let addr = format!("{}:{}", host, port);
+            // TODO: Check if this would also work with IPv6 addresses
+            let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+            println!("Server running on http://{host}:{port}");
+            axum::serve(listener, app).await.unwrap();
         }
     }
 }
