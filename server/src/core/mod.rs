@@ -22,7 +22,7 @@ impl Labman {
         dotenv().ok();
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         let conn = SqliteConnection::establish(&database_url)?;
-        Ok(Labman { conn: conn })
+        Ok(Labman { conn })
     }
 
     pub fn run_migrations(&mut self) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {

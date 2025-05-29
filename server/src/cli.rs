@@ -29,31 +29,27 @@ where
             }
         }
     }
-    return Ok(());
+    Ok(())
 }
 
 /// Create a user and print it
 pub fn create_user(labman: &mut Labman, name: &String, role: &models::UserRole) {
     let user = labman.user().create(name, role);
-    match print_users(std::iter::once(user)) {
-        Err(e) => {
-            eprintln!("Error: {}", e);
-            std::process::exit(1);
-        }
-        Ok(()) => {}
+    if let Err(e) = print_users(std::iter::once(user)) {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
     }
 }
 
 /// Print users with a minimum role
 pub fn list_users(labman: &mut Labman, min_role: &models::UserRole) {
     match labman.user().iter(min_role) {
-        Ok(users) => match print_users(users) {
-            Err(e) => {
+        Ok(users) => {
+            if let Err(e) = print_users(users) {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             }
-            Ok(()) => {}
-        },
+        }
         Err(e) => {
             println!("Error listing users: {}", e)
         }
