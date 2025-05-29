@@ -1,0 +1,15 @@
+[package]
+name = "labman-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "0.8.4"
+clap = { version = "4.5.39", features = ["derive"] }
+diesel = { version = "2.2.0", features = ["sqlite"] }
+diesel-derive-enum = "2.1.0"
+# build libpq and openssl as part of the build process
+# uncomment these lines if you run into setup issues
+# pq-sys = { version = "0.6", features = ["bundled"] }
+# openssl-sys = { version = "0.9.100", features = ["vendored"] }
+dotenvy = "0.15"
