@@ -4,12 +4,12 @@ use dotenvy::dotenv;
 use std::env;
 use std::{borrow::BorrowMut, error::Error};
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
-
 pub mod models;
 pub mod user;
 
 mod schema;
+
+const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 pub struct Labman {
     // TODO: Make generic
