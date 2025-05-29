@@ -1,7 +1,7 @@
 use crate::core::{Labman, models};
 use strum::IntoEnumIterator;
 
-fn print_users<I, E>(users: I) -> Option<E>
+fn print_users<I, E>(users: I) -> Result<(),E>
 where
     I: IntoIterator<Item = Result<models::User, E>>,
     E: std::fmt::Display,
@@ -25,22 +25,22 @@ where
                 );
             }
             Err(e) => {
-                return Some(e);
+                return Err(e);
             }
         }
     }
-    return None;
+    return Ok(());
 }
 
 /// Create a user and print it
 pub fn create_user(labman: &mut Labman, name: &String, role: &models::UserRole) {
     let user = labman.user().create(name, role);
     match print_users(std::iter::once(user)) {
-        Some(e) => {
+        Err(e) => {
             eprintln!("Error: {}", e);
             std::process::exit(1);
         }
-        None => {}
+        Ok(()) => {}
     }
 }
 
@@ -48,11 +48,11 @@ pub fn create_user(labman: &mut Labman, name: &String, role: &models::UserRole) 
 pub fn list_users(labman: &mut Labman, min_role: &models::UserRole) {
     match labman.user().iter(min_role) {
         Ok(users) => match print_users(users) {
-            Some(e) => {
+            Err(e) => {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             }
-            None => {}
+            Ok(()) => {}
         },
         Err(e) => {
             println!("Error listing users: {}", e)
@@ -63,11 +63,11 @@ pub fn list_users(labman: &mut Labman, min_role: &models::UserRole) {
 /// Delete a user by name
 pub fn delete_user(labman: &mut Labman, name: &String) {
     match labman.user().delete(name) {
-        Some(e) => {
+        Err(e) => {
             eprintln!("Error deleting user '{}': {}", name, e);
             std::process::exit(1);
         }
-        None => {
+        Ok(()) => {
             println!("User '{}' deleted successfully.", name);
         }
     }

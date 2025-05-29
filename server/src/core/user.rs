@@ -48,19 +48,19 @@ impl<'a> UserManager<'a> {
             .load_iter::<models::User, DefaultLoadingMode>(self.conn)
     }
 
-    pub fn delete(&mut self, name: &String) -> Option<diesel::result::Error> {
+    pub fn delete(&mut self, name: &String) -> Result<(), diesel::result::Error> {
         use schema::users;
         match self.get(name) {
             Ok(user) => {
                 if let Err(err) =
                     diesel::delete(users::table.filter(users::id.eq(user.id))).execute(self.conn)
                 {
-                    Some(err)
+                    Err(err)
                 } else {
-                    None
+                    Ok(())
                 }
             }
-            Err(err) => Some(err),
+            Err(err) => Err(err),
         }
     }
 }
