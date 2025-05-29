@@ -11,6 +11,7 @@ diesel = { version = "2.2.0", features = [
     "returning_clauses_for_sqlite_3_35",
 ] }
 diesel-derive-enum = "2.1.0"
+diesel_migrations = "2.2.0"
 # build libpq and openssl as part of the build process
 # uncomment these lines if you run into setup issues
 # pq-sys = { version = "0.6", features = ["bundled"] }

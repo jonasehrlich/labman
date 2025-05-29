@@ -56,6 +56,14 @@ fn main() {
         }
     };
 
+    match labman.run_migrations() {
+        Ok(()) => {}
+        Err(e) => {
+            eprint!("Error running pending migrations {}", e);
+            std::process::exit(1);
+        }
+    }
+
     match &args.command {
         Commands::CreateUser { name, role } => {
             cli::create_user(&mut labman, name, role);

@@ -1,7 +1,10 @@
 use diesel::prelude::*;
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
-use std::borrow::BorrowMut;
 use std::env;
+use std::{borrow::BorrowMut, error::Error};
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 pub mod models;
 pub mod user;
@@ -20,6 +23,11 @@ impl Labman {
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         let conn = SqliteConnection::establish(&database_url)?;
         Ok(Labman { conn: conn })
+    }
+
+    pub fn run_migrations(&mut self) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+        self.conn.run_pending_migrations(MIGRATIONS)?;
+        Ok(())
     }
 
     pub fn user(&mut self) -> user::UserManager {
