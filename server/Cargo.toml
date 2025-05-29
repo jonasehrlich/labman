@@ -6,10 +6,15 @@ edition = "2024"
 [dependencies]
 axum = "0.8.4"
 clap = { version = "4.5.39", features = ["derive"] }
-diesel = { version = "2.2.0", features = ["sqlite"] }
+diesel = { version = "2.2.0", features = [
+    "sqlite",
+    "returning_clauses_for_sqlite_3_35",
+] }
 diesel-derive-enum = "2.1.0"
 # build libpq and openssl as part of the build process
 # uncomment these lines if you run into setup issues
 # pq-sys = { version = "0.6", features = ["bundled"] }
 # openssl-sys = { version = "0.9.100", features = ["vendored"] }
 dotenvy = "0.15"
+strum = "0.27.1"
+strum_macros = "0.27.1"
