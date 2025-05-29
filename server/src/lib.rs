@@ -2,6 +2,7 @@ use diesel::{connection::DefaultLoadingMode, prelude::*};
 use dotenvy::dotenv;
 use models::{NewUser, User, UserRole};
 use schema::users;
+use std::borrow::BorrowMut;
 use std::env;
 
 pub mod cli;
@@ -20,8 +21,20 @@ impl Labman {
         Ok(Labman { conn: conn })
     }
 
+    pub fn user(&mut self) -> UserManager {
+        UserManager {
+            conn: self.conn.borrow_mut(),
+        }
+    }
+}
+
+pub struct UserManager<'a> {
+    conn: &'a mut SqliteConnection,
+}
+
+impl<'a> UserManager<'a> {
     /// Create a user in the database
-    pub fn create_user(
+    pub fn create(
         &mut self,
         name: &String,
         role: &models::UserRole,
@@ -33,23 +46,20 @@ impl Labman {
         diesel::insert_into(users::table)
             .values(&new_user)
             .returning(User::as_returning())
-            .get_result(&mut self.conn)
+            .get_result(self.conn)
     }
 
     /// Get a user from the database
-    pub fn get_user_by_name(
-        &mut self,
-        name: &String,
-    ) -> Result<models::User, diesel::result::Error> {
+    pub fn get(&mut self, name: &String) -> Result<models::User, diesel::result::Error> {
         use schema::users::dsl::{name as user_name, users};
         users
             .filter(user_name.eq(name))
             .select(models::User::as_select())
-            .first(&mut self.conn)
+            .first(self.conn)
     }
 
     /// Get the users with a minimum role
-    pub fn get_users<'labman>(
+    pub fn iter<'labman>(
         &'labman mut self,
         min_role: &'labman UserRole,
     ) -> Result<
@@ -59,14 +69,16 @@ impl Labman {
         use schema::users::dsl::{role, users};
         users
             .filter(role.ge(min_role))
-            .load_iter::<User, DefaultLoadingMode>(&mut self.conn)
+            .load_iter::<User, DefaultLoadingMode>(self.conn)
     }
 
-    pub fn delete_user(&mut self, name: &String) -> Option<diesel::result::Error> {
+    pub fn delete(&mut self, name: &String) -> Option<diesel::result::Error> {
         use schema::users::dsl::{id as user_id, users};
-        match self.get_user_by_name(name) {
+        match self.get(name) {
             Ok(user) => {
-                if let Err(err) = diesel::delete(users.filter(user_id.eq(user.id))).execute(&mut self.conn) {
+                if let Err(err) =
+                    diesel::delete(users.filter(user_id.eq(user.id))).execute(self.conn)
+                {
                     Some(err)
                 } else {
                     None

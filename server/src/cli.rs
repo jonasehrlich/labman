@@ -35,7 +35,7 @@ where
 
 /// Create a user and print it
 pub fn create_user(labman: &mut Labman, name: &String, role: &models::UserRole) {
-    let user = labman.create_user(name, role);
+    let user = labman.user().create(name, role);
     match print_users(std::iter::once(user)) {
         Some(e) => {
             eprintln!("Error: {}", e);
@@ -47,7 +47,7 @@ pub fn create_user(labman: &mut Labman, name: &String, role: &models::UserRole) 
 
 /// Print users with a minimum role
 pub fn list_users(labman: &mut Labman, min_role: &models::UserRole) {
-    match labman.get_users(min_role) {
+    match labman.user().iter(min_role) {
         Ok(users) => match print_users(users) {
             Some(e) => {
                 eprintln!("Error: {}", e);
@@ -63,7 +63,7 @@ pub fn list_users(labman: &mut Labman, min_role: &models::UserRole) {
 
 /// Delete a user by name
 pub fn delete_user(labman: &mut Labman, name: &String) {
-    match labman.delete_user(name) {
+    match labman.user().delete(name) {
         Some(e) => {
             eprintln!("Error deleting user '{}': {}", name, e);
             std::process::exit(1);
