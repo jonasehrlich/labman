@@ -33,7 +33,7 @@ where
 }
 
 /// Create a user and print it
-pub fn create_user(labman: &mut Labman, name: &String, role: &models::UserRole) {
+pub fn create_user(labman: &mut Labman, name: &str, role: &models::UserRole) {
     let user = labman.user().create(name, role);
     if let Err(e) = print_users(std::iter::once(user)) {
         eprintln!("Error: {}", e);

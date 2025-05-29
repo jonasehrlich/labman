@@ -14,7 +14,7 @@ impl<'a> UserManager<'a> {
     /// Create a user in the database
     pub fn create(
         &mut self,
-        name: &String,
+        name: &str,
         role: &models::UserRole,
     ) -> Result<models::User, diesel::result::Error> {
         use schema::users;
@@ -26,7 +26,7 @@ impl<'a> UserManager<'a> {
     }
 
     /// Get a user from the database
-    pub fn get(&mut self, name: &String) -> Result<models::User, diesel::result::Error> {
+    pub fn get(&mut self, name: &str) -> Result<models::User, diesel::result::Error> {
         use schema::users;
         users::table
             .filter(users::name.eq(name))
@@ -48,7 +48,7 @@ impl<'a> UserManager<'a> {
             .load_iter::<models::User, DefaultLoadingMode>(self.conn)
     }
 
-    pub fn delete(&mut self, name: &String) -> Result<(), diesel::result::Error> {
+    pub fn delete(&mut self, name: &str) -> Result<(), diesel::result::Error> {
         use schema::users;
         match self.get(name) {
             Ok(user) => {

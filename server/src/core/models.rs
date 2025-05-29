@@ -4,12 +4,26 @@ use diesel::expression::AsExpression;
 use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Integer;
 use diesel::{backend::Backend, prelude::*};
-use strum_macros::EnumIter;
+use strum_macros::{Display, EnumIter, EnumString};
 
 use crate::core::schema;
 
 #[repr(i32)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum, FromSqlRow, AsExpression, EnumIter)]
+#[derive(
+    Debug,
+    Display,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    ValueEnum,
+    EnumIter,
+    EnumString,
+    FromSqlRow,
+    AsExpression,
+)]
 #[diesel(sql_type = Integer)]
 pub enum UserRole {
     /// Administrator role, highest level of access
