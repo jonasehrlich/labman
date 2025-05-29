@@ -1,7 +1,7 @@
 use crate::core::{Labman, models};
 use strum::IntoEnumIterator;
 
-fn print_users<I, E>(users: I) -> Result<(),E>
+fn print_users<I, E>(users: I) -> Result<(), E>
 where
     I: IntoIterator<Item = Result<models::User, E>>,
     E: std::fmt::Display,
