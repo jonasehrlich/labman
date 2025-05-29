@@ -17,14 +17,14 @@ enum Commands {
         #[arg(long, short = 'n')]
         name: String,
         /// Role of the user
-        #[arg(value_enum, long, short = 'r')]
+        #[arg(value_enum, long, short = 'r', ignore_case = true)]
         role: models::UserRole,
     },
 
     /// List the available users
     ListUsers {
         /// Minimum role of the users to list
-        #[arg(value_enum, default_value = "reporter")]
+        #[arg(value_enum, default_value = "reporter", ignore_case = true)]
         min_role: models::UserRole,
     },
 
