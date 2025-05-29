@@ -1,7 +1,5 @@
 use diesel::prelude::*;
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
-use dotenvy::dotenv;
-use std::env;
 use std::{borrow::BorrowMut, error::Error};
 
 pub mod models;
@@ -17,11 +15,8 @@ pub struct Labman {
 }
 
 impl Labman {
-    pub fn new() -> Result<Self, diesel::result::ConnectionError> {
-        // TODO: remove dotenv handling from here
-        dotenv().ok();
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let conn = SqliteConnection::establish(&database_url)?;
+    pub fn new(database_url: &str) -> Result<Self, diesel::result::ConnectionError> {
+        let conn = SqliteConnection::establish(database_url)?;
         Ok(Labman { conn })
     }
 

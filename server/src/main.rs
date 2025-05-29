@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
+use dotenvy::dotenv;
 use labman_server::{cli, core};
+use std::env;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -48,7 +50,11 @@ enum Commands {
 
 fn main() {
     let args = Cli::parse();
-    let mut labman = match core::Labman::new() {
+
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    let mut labman = match core::Labman::new(&database_url) {
         Ok(labman) => labman,
         Err(e) => {
             eprintln!("Failed to initialize Labman: {}", e);
