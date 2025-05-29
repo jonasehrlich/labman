@@ -6,7 +6,7 @@ use diesel::sql_types::Integer;
 use diesel::{backend::Backend, prelude::*};
 use strum_macros::EnumIter;
 
-use crate::schema;
+use crate::core::schema;
 
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum, FromSqlRow, AsExpression, EnumIter)]

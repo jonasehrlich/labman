@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use labman_server::{Labman, cli, models};
+use labman_server::{cli, core};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -18,14 +18,14 @@ enum Commands {
         name: String,
         /// Role of the user
         #[arg(value_enum, long, short = 'r', ignore_case = true)]
-        role: models::UserRole,
+        role: core::models::UserRole,
     },
 
     /// List the available users
     ListUsers {
         /// Minimum role of the users to list
         #[arg(value_enum, default_value = "reporter", ignore_case = true)]
-        min_role: models::UserRole,
+        min_role: core::models::UserRole,
     },
 
     /// Delete a user
@@ -48,7 +48,7 @@ enum Commands {
 
 fn main() {
     let args = Cli::parse();
-    let mut labman = match Labman::new() {
+    let mut labman = match core::Labman::new() {
         Ok(labman) => labman,
         Err(e) => {
             eprintln!("Failed to initialize Labman: {}", e);

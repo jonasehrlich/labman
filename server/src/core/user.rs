@@ -1,5 +1,5 @@
-use crate::models;
-use crate::schema;
+use crate::core::models;
+use crate::core::schema;
 use diesel::{connection::DefaultLoadingMode, prelude::*};
 
 pub struct UserManager<'a> {

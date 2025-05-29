@@ -1,6 +1,5 @@
+use crate::core::{Labman, models};
 use strum::IntoEnumIterator;
-
-use crate::{Labman, models};
 
 fn print_users<I, E>(users: I) -> Option<E>
 where
