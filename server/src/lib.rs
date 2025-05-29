@@ -1,7 +1,6 @@
 use diesel::{connection::DefaultLoadingMode, prelude::*};
 use dotenvy::dotenv;
 use models::{NewUser, User, UserRole};
-use schema::users;
 use std::borrow::BorrowMut;
 use std::env;
 
@@ -10,11 +9,13 @@ pub mod models;
 pub mod schema;
 
 pub struct Labman {
+    // TODO: Make generic
     conn: SqliteConnection,
 }
 
 impl Labman {
     pub fn new() -> Result<Self, diesel::result::ConnectionError> {
+        // TODO: remove dotenv handling from here
         dotenv().ok();
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         let conn = SqliteConnection::establish(&database_url)?;
@@ -22,9 +23,7 @@ impl Labman {
     }
 
     pub fn user(&mut self) -> UserManager {
-        UserManager {
-            conn: self.conn.borrow_mut(),
-        }
+        UserManager::new(self.conn.borrow_mut())
     }
 }
 
@@ -33,15 +32,17 @@ pub struct UserManager<'a> {
 }
 
 impl<'a> UserManager<'a> {
+    pub fn new(conn: &'a mut SqliteConnection) -> Self {
+        UserManager { conn }
+    }
+
     /// Create a user in the database
     pub fn create(
         &mut self,
         name: &String,
         role: &models::UserRole,
     ) -> Result<models::User, diesel::result::Error> {
-        // use self::schema::user_roles::dsl::*;
-        // use crate::schema::users;
-        // let new_user = NewUser
+        use schema::users;
         let new_user = NewUser { name, role };
         diesel::insert_into(users::table)
             .values(&new_user)
@@ -51,9 +52,9 @@ impl<'a> UserManager<'a> {
 
     /// Get a user from the database
     pub fn get(&mut self, name: &String) -> Result<models::User, diesel::result::Error> {
-        use schema::users::dsl::{name as user_name, users};
-        users
-            .filter(user_name.eq(name))
+        use schema::users;
+        users::table
+            .filter(users::name.eq(name))
             .select(models::User::as_select())
             .first(self.conn)
     }
@@ -66,18 +67,18 @@ impl<'a> UserManager<'a> {
         impl Iterator<Item = Result<User, diesel::result::Error>> + 'labman,
         diesel::result::Error,
     > {
-        use schema::users::dsl::{role, users};
-        users
-            .filter(role.ge(min_role))
+        use schema::users;
+        users::table
+            .filter(users::role.ge(min_role))
             .load_iter::<User, DefaultLoadingMode>(self.conn)
     }
 
     pub fn delete(&mut self, name: &String) -> Option<diesel::result::Error> {
-        use schema::users::dsl::{id as user_id, users};
+        use schema::users;
         match self.get(name) {
             Ok(user) => {
                 if let Err(err) =
-                    diesel::delete(users.filter(user_id.eq(user.id))).execute(self.conn)
+                    diesel::delete(users::table.filter(users::id.eq(user.id))).execute(self.conn)
                 {
                     Some(err)
                 } else {
