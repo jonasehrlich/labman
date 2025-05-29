@@ -60,3 +60,16 @@ pub fn list_users(labman: &mut Labman, min_role: &models::UserRole) {
         }
     }
 }
+
+/// Delete a user by name
+pub fn delete_user(labman: &mut Labman, name: &String) {
+    match labman.delete_user(name) {
+        Some(e) => {
+            eprintln!("Error deleting user '{}': {}", name, e);
+            std::process::exit(1);
+        }
+        None => {
+            println!("User '{}' deleted successfully.", name);
+        }
+    }
+}

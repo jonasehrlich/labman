@@ -28,6 +28,13 @@ enum Commands {
         min_role: models::UserRole,
     },
 
+    /// Delete a user
+    DeleteUser {
+        /// Name of the user to delete
+        #[arg(long, short = 'n')]
+        name: String,
+    },
+
     /// Run the server
     Run {
         /// Host to bind the server to
@@ -55,6 +62,9 @@ fn main() {
         }
         Commands::ListUsers { min_role } => {
             cli::list_users(&mut labman, min_role);
+        }
+        Commands::DeleteUser { name } => {
+            cli::delete_user(&mut labman, name);
         }
         Commands::Run { host: _, port: _ } => {
             todo!("run the server")

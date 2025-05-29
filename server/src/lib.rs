@@ -61,4 +61,18 @@ impl Labman {
             .filter(role.ge(min_role))
             .load_iter::<User, DefaultLoadingMode>(&mut self.conn)
     }
+
+    pub fn delete_user(&mut self, name: &String) -> Option<diesel::result::Error> {
+        use schema::users::dsl::{id as user_id, users};
+        match self.get_user_by_name(name) {
+            Ok(user) => {
+                if let Err(err) = diesel::delete(users.filter(user_id.eq(user.id))).execute(&mut self.conn) {
+                    Some(err)
+                } else {
+                    None
+                }
+            }
+            Err(err) => Some(err),
+        }
+    }
 }
