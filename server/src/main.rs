@@ -3,6 +3,7 @@ use dotenvy::dotenv;
 use labman_server::{cli, core, web};
 use std::env;
 use std::sync::Arc;
+use utoipa::OpenApi;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -49,6 +50,14 @@ enum Commands {
     },
 }
 
+#[derive(utoipa::OpenApi)]
+#[openapi(
+        nest(
+            (path = "/api/v1", api = web::api::v1::OpenApiDoc)
+        )
+    )]
+struct ApiDoc;
+
 #[tokio::main]
 async fn main() {
     let args = Cli::parse();
@@ -75,7 +84,11 @@ async fn main() {
             cli::delete_user(&labman, name).await;
         }
         Commands::Run { host, port } => {
-            let app = web::router().with_state(labman);
+            let app = web::router().with_state(labman).merge(
+                utoipa_rapidoc::RapiDoc::with_openapi("/api-docs/openapi.json", ApiDoc::openapi())
+                    .path("/rapidoc"),
+            );
+
             let addr = format!("{}:{}", host, port);
             // TODO: Check if this would also work with IPv6 addresses
             let listener = tokio::net::TcpListener::bind(addr).await.unwrap();

@@ -18,3 +18,6 @@ serde = "1.0.219"
 strum = "0.27.1"
 strum_macros = "0.27.1"
 tokio = { version = "1.45.1", features = ["full"] }
+utoipa = { version = "5.3.1", features = ["axum_extras"] }
+utoipa-axum = { version = "0.2.0" }
+utoipa-rapidoc = { version = "6.0.0", features = ["axum"] }

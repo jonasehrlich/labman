@@ -25,6 +25,7 @@ use strum_macros::{Display, EnumIter, EnumString};
     FromSqlRow,
     AsExpression,
     Serialize,
+    utoipa::ToSchema,
 )]
 #[diesel(sql_type = Integer)]
 pub enum UserRole {
@@ -94,14 +95,14 @@ where
     }
 }
 
-#[derive(Insertable, Deserialize)]
+#[derive(Insertable, Deserialize, utoipa::ToSchema)]
 #[diesel(table_name = schema::users)]
 pub struct NewUser {
     pub name: String,
     pub role: UserRole,
 }
 
-#[derive(Queryable, Selectable, Serialize)]
+#[derive(Queryable, Selectable, Serialize, utoipa::ToSchema)]
 #[diesel(table_name = schema::users)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct User {

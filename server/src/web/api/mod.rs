@@ -11,12 +11,26 @@ pub mod v1 {
     use axum::{Json, extract::State, http, routing};
     use std::sync::Arc;
 
+    #[derive(utoipa::OpenApi)]
+    #[openapi(paths(list_users, create_user, get_user, delete_user))]
+    pub struct OpenApiDoc;
+
     pub fn router() -> routing::Router<Arc<core::Labman>> {
         routing::Router::new()
             .route("/users", routing::get(list_users).post(create_user))
             .route("/users/{id}", routing::get(get_user).delete(delete_user))
     }
 
+    #[utoipa::path(
+    get,
+    path = "/users",
+    description = "List all users",
+    responses(
+        (status = OK, description = "List users", body = [core::models::User]),
+        (status = http::StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error"),
+        (status = http::StatusCode::UNAUTHORIZED, description = "Unauthorized")
+    )
+)]
     async fn list_users(
         State(labman): State<Arc<core::Labman>>,
     ) -> Result<Json<Vec<core::models::User>>, http::StatusCode> {
@@ -32,6 +46,17 @@ pub mod v1 {
         Ok(Json(users))
     }
 
+    #[utoipa::path(
+    get,
+    path = "/users/{id}",
+    description = "Get a user by ID",
+    responses(
+        (status = OK, description = "Success", body = core::models::User),
+        (status = http::StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error"),
+        (status = http::StatusCode::UNAUTHORIZED, description = "Unauthorized"),
+        (status = http::StatusCode::NOT_FOUND, description = "User not found")
+    )
+)]
     async fn get_user(
         State(_labman): State<Arc<core::Labman>>,
     ) -> Result<Json<String>, http::StatusCode> {
@@ -41,6 +66,17 @@ pub mod v1 {
         Ok(Json("alice".to_string()))
     }
 
+    #[utoipa::path(
+    post,
+    path = "/users",
+
+    description = "Create a user",
+    responses(
+        (status = OK, description = "Success", body = core::models::User),
+        (status = http::StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error"),
+        (status = http::StatusCode::UNAUTHORIZED, description = "Unauthorized")
+    )
+)]
     async fn create_user(
         State(labman): State<Arc<core::Labman>>,
         Json(new_user): Json<core::models::NewUser>,
@@ -55,6 +91,16 @@ pub mod v1 {
         Ok((http::StatusCode::CREATED, Json(user)))
     }
 
+    #[utoipa::path(
+    delete,
+    path = "/users/{id}",
+    description = "Delete a user",
+    responses(
+        (status = OK, description = "Success"),
+        (status = http::StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error"),
+        (status = http::StatusCode::UNAUTHORIZED, description = "Unauthorized")
+    )
+)]
     async fn delete_user(
         State(_labman): State<Arc<core::Labman>>,
     ) -> Result<http::StatusCode, http::StatusCode> {

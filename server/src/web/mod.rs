@@ -2,7 +2,7 @@ use crate::core;
 use axum::{http, routing};
 use std::sync::Arc;
 
-mod api;
+pub mod api;
 
 /// Utility function for mapping boxed errors into a `500 Internal Server Error`
 /// response.
