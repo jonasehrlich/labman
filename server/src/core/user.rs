@@ -36,8 +36,11 @@ impl<'a> UserManager<'a> {
         Ok(res)
     }
 
-    /// Get a user from the database
-    pub async fn get(&self, name: &str) -> Result<models::User, Box<dyn std::error::Error>> {
+    /// Get a user by name
+    pub async fn get_by_name(
+        &self,
+        name: &str,
+    ) -> Result<models::User, Box<dyn std::error::Error>> {
         use schema::users;
         let conn = self.pool.get().await?;
 
@@ -46,6 +49,22 @@ impl<'a> UserManager<'a> {
             .interact(move |conn| {
                 users::table
                     .filter(users::name.eq(&name))
+                    .select(models::User::as_select())
+                    .first(conn)
+            })
+            .await??;
+        Ok(res)
+    }
+
+    /// Get a by ID
+    pub async fn get_by_id(&self, id: u32) -> Result<models::User, Box<dyn std::error::Error>> {
+        use schema::users;
+        let conn = self.pool.get().await?;
+
+        let res = conn
+            .interact(move |conn| {
+                users::table
+                    .filter(users::id.eq(id as i32))
                     .select(models::User::as_select())
                     .first(conn)
             })

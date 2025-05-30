@@ -35,7 +35,7 @@ async fn cannot_create_duplicate_user() {
 }
 
 #[tokio::test]
-async fn can_find_user() {
+async fn can_get_user() {
     let labman = testing::labman::in_memory().await;
     let user_manager = labman.user();
     assert!(
@@ -44,14 +44,21 @@ async fn can_find_user() {
             .await
             .is_ok()
     );
-    let user = user_manager.get("carol").await;
+    let user = user_manager.get_by_name("carol").await;
     assert!(user.is_ok());
+    assert!(
+        user_manager
+            .get_by_id(user.unwrap().id as u32)
+            .await
+            .is_ok()
+    );
 }
 
 #[tokio::test]
-async fn cannot_find_nonexistent_user() {
+async fn cannot_get_nonexistent_user() {
     let labman = testing::labman::in_memory().await;
-    assert!(labman.user().get("nonexistent").await.is_err());
+    assert!(labman.user().get_by_name("nonexistent").await.is_err());
+    assert!(labman.user().get_by_id(123).await.is_err());
 }
 
 #[tokio::test]
