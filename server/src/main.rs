@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
 use labman_server::{cli, core, web};
 use std::env;
+use std::sync::Arc;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -55,14 +56,14 @@ async fn main() {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    let labman = match core::Labman::new(&database_url).await {
-        Ok(labman) => labman,
-        Err(e) => {
-            eprintln!("Failed to initialize Labman: {}", e);
-            std::process::exit(1);
-        }
-    };
-
+    let labman = Arc::new(
+        core::Labman::new(&database_url)
+            .await
+            .unwrap_or_else(|err| {
+                eprintln!("Failed to create shared state: {}", err);
+                std::process::exit(1);
+            }),
+    );
     match &args.command {
         Commands::CreateUser { name, role } => {
             cli::create_user(&labman, name, role).await;
@@ -74,7 +75,7 @@ async fn main() {
             cli::delete_user(&labman, name).await;
         }
         Commands::Run { host, port } => {
-            let app = web::router();
+            let app = web::router().with_state(labman);
             let addr = format!("{}:{}", host, port);
             // TODO: Check if this would also work with IPv6 addresses
             let listener = tokio::net::TcpListener::bind(addr).await.unwrap();

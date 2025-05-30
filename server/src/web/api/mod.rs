@@ -1,34 +1,56 @@
-use axum::Router;
+use crate::core;
+use axum::routing;
+use std::sync::Arc;
 
-pub fn router() -> Router {
-    Router::new().nest("/v1", v1::router())
+pub fn router() -> routing::Router<Arc<core::Labman>> {
+    routing::Router::new().nest("/v1", v1::router())
 }
 
 pub mod v1 {
-    use axum::{Json, Router, http::StatusCode, routing};
+    use crate::core;
+    use axum::{Json, extract::State, http, routing};
+    use std::sync::Arc;
 
-    pub fn router() -> Router {
-        Router::new()
-            .route("/users", routing::get(get_users).post(create_user))
+    pub fn router() -> routing::Router<Arc<core::Labman>> {
+        routing::Router::new()
+            .route("/users", routing::get(list_users).post(create_user))
             .route("/users/{id}", routing::get(get_user).delete(delete_user))
     }
 
-    async fn get_users() -> Json<Vec<String>> {
-        // Placeholder for actual user retrieval logic
-        Json(vec!["alice".to_string(), "bob".to_string()])
+    async fn list_users(
+        State(labman): State<Arc<core::Labman>>,
+    ) -> Result<Json<Vec<core::models::User>>, (http::StatusCode, String)> {
+        let users = labman
+            .user()
+            .iter(&core::models::UserRole::min())
+            .await
+            .map_err(crate::web::internal_error)?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(crate::web::internal_error)?;
+        Ok(Json(users))
     }
-    async fn get_user() -> Result<Json<String>, StatusCode> {
+
+    async fn get_user(
+        State(_labman): State<Arc<core::Labman>>,
+    ) -> Result<Json<String>, http::StatusCode> {
         // Placeholder for actual user retrieval logic
         Ok(Json("alice".to_string()))
     }
-    async fn create_user(Json(user): Json<String>) -> Result<StatusCode, StatusCode> {
+
+    async fn create_user(
+        State(_labman): State<Arc<core::Labman>>,
+        Json(user): Json<String>,
+    ) -> Result<http::StatusCode, http::StatusCode> {
         // Placeholder for actual user creation logic
         println!("Creating user: {}", user);
-        Ok(StatusCode::CREATED)
+        Ok(http::StatusCode::CREATED)
     }
-    async fn delete_user() -> Result<StatusCode, StatusCode> {
+
+    async fn delete_user(
+        State(_labman): State<Arc<core::Labman>>,
+    ) -> Result<http::StatusCode, http::StatusCode> {
         // Placeholder for actual user deletion logic
         println!("Deleting user");
-        Ok(StatusCode::NO_CONTENT)
+        Ok(http::StatusCode::NO_CONTENT)
     }
 }
