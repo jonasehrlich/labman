@@ -53,7 +53,7 @@ enum Commands {
 #[derive(utoipa::OpenApi)]
 #[openapi(
         nest(
-            (path = "/api/v1", api = web::api::v1::OpenApiDoc)
+            (path = "/api", api = web::api::ApiDoc)
         )
     )]
 struct ApiDoc;
