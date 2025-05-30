@@ -84,14 +84,14 @@ where
     }
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Deserialize)]
 #[diesel(table_name = schema::users)]
-pub struct NewUser<'a> {
-    pub name: &'a str,
-    pub role: &'a UserRole,
+pub struct NewUser {
+    pub name: String,
+    pub role: UserRole,
 }
 
-#[derive(Queryable, Selectable, Serialize, Deserialize)]
+#[derive(Queryable, Selectable, Serialize)]
 #[diesel(table_name = schema::users)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct User {

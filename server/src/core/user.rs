@@ -26,10 +26,7 @@ impl<'a> UserManager<'a> {
         let conn = self.pool.get().await?;
         let res = conn
             .interact(move |conn| {
-                let new_user = models::NewUser {
-                    name: &name,
-                    role: &role,
-                };
+                let new_user = models::NewUser { name, role };
                 diesel::insert_into(users::table)
                     .values(new_user)
                     .returning(models::User::as_returning())
