@@ -5,7 +5,7 @@ use diesel::expression::AsExpression;
 use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Integer;
 use diesel::{backend::Backend, prelude::*};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter, EnumString};
 
@@ -25,7 +25,6 @@ use strum_macros::{Display, EnumIter, EnumString};
     FromSqlRow,
     AsExpression,
     Serialize,
-    Deserialize,
 )]
 #[diesel(sql_type = Integer)]
 pub enum UserRole {
@@ -35,6 +34,17 @@ pub enum UserRole {
     Developer = 50,
     /// Reporter role, read-only access
     Reporter = 20,
+}
+
+// Custom deserializer using FromStr (provided by strum)
+impl<'de> Deserialize<'de> for UserRole {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        UserRole::from_str(&s, true).map_err(serde::de::Error::custom)
+    }
 }
 
 impl UserRole {
