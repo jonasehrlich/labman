@@ -1,12 +1,13 @@
+use crate::core::schema;
 use clap::ValueEnum;
 use diesel::deserialize::{self, FromSql, FromSqlRow};
 use diesel::expression::AsExpression;
 use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Integer;
 use diesel::{backend::Backend, prelude::*};
+use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter, EnumString};
-
-use crate::core::schema;
 
 #[repr(i32)]
 #[derive(
@@ -23,6 +24,8 @@ use crate::core::schema;
     EnumString,
     FromSqlRow,
     AsExpression,
+    Serialize,
+    Deserialize,
 )]
 #[diesel(sql_type = Integer)]
 pub enum UserRole {
@@ -43,6 +46,16 @@ impl UserRole {
             x if x == UserRole::Reporter as i32 => Some(UserRole::Reporter),
             _ => None,
         }
+    }
+
+    /// Get the lowest user role
+    pub fn min() -> Self {
+        UserRole::iter().min().unwrap()
+    }
+
+    /// Get the highest user role
+    pub fn max() -> Self {
+        UserRole::iter().max().unwrap()
     }
 }
 
@@ -78,7 +91,7 @@ pub struct NewUser<'a> {
     pub role: &'a UserRole,
 }
 
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = schema::users)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct User {
