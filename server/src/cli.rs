@@ -33,8 +33,8 @@ where
 }
 
 /// Create a user and print it
-pub fn create_user(labman: &mut Labman, name: &str, role: &models::UserRole) {
-    let user = labman.user().create(name, role);
+pub async fn create_user(labman: &Labman, name: &str, role: &models::UserRole) {
+    let user = labman.user().create(name, role).await;
     if let Err(e) = print_users(std::iter::once(user)) {
         eprintln!("Error: {}", e);
         std::process::exit(1);
@@ -42,8 +42,8 @@ pub fn create_user(labman: &mut Labman, name: &str, role: &models::UserRole) {
 }
 
 /// Print users with a minimum role
-pub fn list_users(labman: &mut Labman, min_role: &models::UserRole) {
-    match labman.user().iter(min_role) {
+pub async fn list_users(labman: &Labman, min_role: &models::UserRole) {
+    match labman.user().iter(min_role).await {
         Ok(users) => {
             if let Err(e) = print_users(users) {
                 eprintln!("Error: {}", e);
@@ -57,8 +57,8 @@ pub fn list_users(labman: &mut Labman, min_role: &models::UserRole) {
 }
 
 /// Delete a user by name
-pub fn delete_user(labman: &mut Labman, name: &String) {
-    match labman.user().delete(name) {
+pub async fn delete_user(labman: &Labman, name: &String) {
+    match labman.user().delete(name).await {
         Err(e) => {
             eprintln!("Error deleting user '{}': {}", name, e);
             std::process::exit(1);

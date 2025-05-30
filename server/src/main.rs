@@ -55,7 +55,7 @@ async fn main() {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    let mut labman = match core::Labman::new(&database_url) {
+    let labman = match core::Labman::new(&database_url).await {
         Ok(labman) => labman,
         Err(e) => {
             eprintln!("Failed to initialize Labman: {}", e);
@@ -65,13 +65,13 @@ async fn main() {
 
     match &args.command {
         Commands::CreateUser { name, role } => {
-            cli::create_user(&mut labman, name, role);
+            cli::create_user(&labman, name, role).await;
         }
         Commands::ListUsers { min_role } => {
-            cli::list_users(&mut labman, min_role);
+            cli::list_users(&labman, min_role).await;
         }
         Commands::DeleteUser { name } => {
-            cli::delete_user(&mut labman, name);
+            cli::delete_user(&labman, name).await;
         }
         Commands::Run { host, port } => {
             let app = web::router();
