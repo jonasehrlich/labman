@@ -7,7 +7,7 @@ pub fn router() -> routing::Router<Arc<core::Labman>> {
 }
 
 pub mod v1 {
-    use crate::core;
+    use crate::{core, web::internal_error};
     use axum::{Json, extract::State, http, routing};
     use std::sync::Arc;
 
@@ -19,7 +19,9 @@ pub mod v1 {
 
     async fn list_users(
         State(labman): State<Arc<core::Labman>>,
-    ) -> Result<Json<Vec<core::models::User>>, (http::StatusCode, String)> {
+    ) -> Result<Json<Vec<core::models::User>>, http::StatusCode> {
+        // TODO: Check if requesting user is authorized to list users
+
         let users = labman
             .user()
             .iter(&core::models::UserRole::min())
@@ -33,22 +35,31 @@ pub mod v1 {
     async fn get_user(
         State(_labman): State<Arc<core::Labman>>,
     ) -> Result<Json<String>, http::StatusCode> {
+        // TODO: Check if requesting user is authorized to get users
+
         // Placeholder for actual user retrieval logic
         Ok(Json("alice".to_string()))
     }
 
     async fn create_user(
-        State(_labman): State<Arc<core::Labman>>,
-        Json(user): Json<String>,
-    ) -> Result<http::StatusCode, http::StatusCode> {
-        // Placeholder for actual user creation logic
-        println!("Creating user: {}", user);
-        Ok(http::StatusCode::CREATED)
+        State(labman): State<Arc<core::Labman>>,
+        Json(new_user): Json<core::models::NewUser>,
+    ) -> Result<(http::StatusCode, Json<core::models::User>), http::StatusCode> {
+        // TODO: Check if requesting user is authorized to create users
+        let user = labman
+            .user()
+            .create(&new_user.name, &new_user.role)
+            .await
+            .map_err(internal_error)?;
+
+        Ok((http::StatusCode::CREATED, Json(user)))
     }
 
     async fn delete_user(
         State(_labman): State<Arc<core::Labman>>,
     ) -> Result<http::StatusCode, http::StatusCode> {
+        // TODO: Check if requesting user is authorized to delete users
+
         // Placeholder for actual user deletion logic
         println!("Deleting user");
         Ok(http::StatusCode::NO_CONTENT)
