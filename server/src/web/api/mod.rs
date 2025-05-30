@@ -7,8 +7,9 @@ pub fn router() -> routing::Router<Arc<core::Labman>> {
 }
 
 pub mod v1 {
-    use crate::{core, web::internal_error};
-    use axum::{Json, extract::State, http, routing};
+    use crate::{core, web::internal_error, web::not_found};
+    use axum::extract::{Path, State};
+    use axum::{Json, http, routing};
     use std::sync::Arc;
 
     #[derive(utoipa::OpenApi)]
@@ -48,8 +49,8 @@ pub mod v1 {
 
     #[utoipa::path(
     get,
-    path = "/users/{id}",
-    description = "Get a user by ID",
+    path = "/users/:id",
+    description = "Get a single user",
     responses(
         (status = OK, description = "Success", body = core::models::User),
         (status = http::StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error"),
@@ -58,12 +59,12 @@ pub mod v1 {
     )
 )]
     async fn get_user(
-        State(_labman): State<Arc<core::Labman>>,
-    ) -> Result<Json<String>, http::StatusCode> {
+        State(labman): State<Arc<core::Labman>>,
+        Path(id): Path<u32>,
+    ) -> Result<Json<core::models::User>, http::StatusCode> {
         // TODO: Check if requesting user is authorized to get users
-
-        // Placeholder for actual user retrieval logic
-        Ok(Json("alice".to_string()))
+        let user = labman.user().get_by_id(id).await.map_err(not_found)?;
+        Ok(Json(user))
     }
 
     #[utoipa::path(

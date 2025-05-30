@@ -11,6 +11,11 @@ fn internal_error(err: Box<dyn std::error::Error>) -> http::StatusCode {
     http::StatusCode::INTERNAL_SERVER_ERROR
 }
 
+fn not_found(err: Box<dyn std::error::Error>) -> http::StatusCode {
+    eprintln!("Not found: {}", err);
+    http::StatusCode::NOT_FOUND
+}
+
 pub fn router() -> routing::Router<Arc<core::Labman>> {
     routing::Router::new()
         .route("/", routing::get(handler1))
