@@ -58,12 +58,18 @@ pub async fn list_users(labman: &Labman, min_role: &models::UserRole) {
 
 /// Delete a user by name
 pub async fn delete_user(labman: &Labman, name: &String) {
-    match labman.user().delete(name).await {
+    let user_manager = labman.user();
+
+    match user_manager.get_by_name(name).await {
         Err(e) => {
-            eprintln!("Error deleting user '{}': {}", name, e);
+            eprintln!("Error getting user '{}': {}", name, e);
             std::process::exit(1);
         }
-        Ok(()) => {
+        Ok(user) => {
+            user_manager.delete(user.id).await.unwrap_or_else(|e| {
+                eprintln!("Error deleting user '{}': {}", name, e);
+                std::process::exit(1);
+            });
             println!("User '{}' deleted successfully.", name);
         }
     }

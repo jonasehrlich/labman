@@ -80,3 +80,16 @@ async fn can_create_multiple_users() {
     assert!(eve.role > dave.role);
     assert!(jimmy.role == dave.role);
 }
+
+#[tokio::test]
+async fn can_delete_user() {
+    let labman = testing::labman::in_memory().await;
+    let user_manager = labman.user();
+    let frank = user_manager
+        .create("frank", &UserRole::Developer)
+        .await
+        .unwrap();
+    assert!(user_manager.delete(frank.id).await.is_ok());
+    assert!(user_manager.delete(frank.id).await.is_err());
+    assert!(user_manager.get_by_id(frank.id as u32).await.is_err());
+}

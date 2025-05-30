@@ -9,7 +9,7 @@ pub fn router() -> routing::Router<Arc<core::Labman>> {
     routing::Router::new().nest("/v1", v1::router())
 }
 
-/// Represents a JSON response for HTTP status codes containing the canonical reason for the status.
+/// JSON response for HTTP containing the canonical reason for the status.
 #[derive(Serialize, ToSchema)]
 struct StatusJsonResponse {
     status: String,
@@ -131,12 +131,11 @@ pub mod v1 {
     )
 )]
     async fn delete_user(
-        State(_labman): State<Arc<core::Labman>>,
-    ) -> Result<http::StatusCode, super::HttpStatus> {
+        State(labman): State<Arc<core::Labman>>,
+        Path(id): Path<u32>,
+    ) -> Result<super::HttpStatus, super::HttpStatus> {
         // TODO: Check if requesting user is authorized to delete users
-
-        // Placeholder for actual user deletion logic
-        println!("Deleting user");
-        Ok(http::StatusCode::NO_CONTENT)
+        labman.user().delete(id as i32).await.map_err(not_found)?;
+        Ok(super::HttpStatus(http::StatusCode::OK))
     }
 }

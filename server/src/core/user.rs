@@ -94,17 +94,21 @@ impl<'a> UserManager<'a> {
         Ok(res.into_iter().map(Ok))
     }
 
-    pub async fn delete(&self, name: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn delete(&self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
         use schema::users;
         let conn = self.pool.get().await?;
 
-        let name = name.to_string();
-        conn.interact(move |conn| {
-            diesel::delete(users::table)
-                .filter(users::name.eq(&name))
-                .execute(conn)
-        })
-        .await??;
+        let rows_affected = conn
+            .interact(move |conn| {
+                diesel::delete(users::table)
+                    .filter(users::id.eq(id))
+                    .execute(conn)
+            })
+            .await??;
+
+        if rows_affected == 0 {
+            return Err("User not found".into());
+        }
         Ok(())
     }
 }
