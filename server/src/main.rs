@@ -3,7 +3,6 @@ use dotenvy::dotenv;
 use labman_server::{cli, core, web};
 use std::env;
 use std::sync::Arc;
-use utoipa::OpenApi;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -50,14 +49,6 @@ enum Commands {
     },
 }
 
-#[derive(utoipa::OpenApi)]
-#[openapi(
-        nest(
-            (path = "/api", api = web::api::ApiDoc)
-        )
-    )]
-struct ApiDoc;
-
 #[tokio::main]
 async fn main() {
     let args = Cli::parse();
@@ -73,6 +64,7 @@ async fn main() {
                 std::process::exit(1);
             }),
     );
+
     match &args.command {
         Commands::CreateUser { name, role } => {
             cli::create_user(&labman, name, role).await;
@@ -84,16 +76,18 @@ async fn main() {
             cli::delete_user(&labman, name).await;
         }
         Commands::Run { host, port } => {
-            let app = web::router().with_state(labman).merge(
-                utoipa_rapidoc::RapiDoc::with_openapi("/api-docs/openapi.json", ApiDoc::openapi())
-                    .path("/rapidoc"),
-            );
-
-            let addr = format!("{}:{}", host, port);
-            // TODO: Check if this would also work with IPv6 addresses
-            let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-            println!("Server running on http://{host}:{port}");
-            axum::serve(listener, app).await.unwrap();
+            web::App::new(labman.clone())
+                .await
+                .unwrap_or_else(|err| {
+                    eprintln!("Failed to create app: {}", err);
+                    std::process::exit(1);
+                })
+                .serve(host, *port)
+                .await
+                .unwrap_or_else(|err| {
+                    eprintln!("Failed to start server: {}", err);
+                    std::process::exit(1);
+                });
         }
     }
 }

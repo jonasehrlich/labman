@@ -5,7 +5,8 @@ use serde::Serialize;
 use std::sync::Arc;
 use utoipa::ToSchema;
 
-pub fn router() -> routing::Router<Arc<core::Labman>> {
+/// Get the router for the API.
+pub(super) fn router() -> routing::Router<Arc<core::Labman>> {
     routing::Router::new().nest("/v1", v1::router())
 }
 
@@ -18,6 +19,7 @@ struct StatusJsonResponse {
 /// Represents an HTTP status code that can be converted into a response.
 struct HttpStatus(http::StatusCode);
 
+/// Implementing the `From` trait to convert `http::StatusCode` into `HttpStatus`.
 impl From<http::StatusCode> for HttpStatus {
     fn from(status: http::StatusCode) -> Self {
         HttpStatus(status)
@@ -49,6 +51,7 @@ pub mod v1 {
 
     mod users;
 
+    /// API documentation for the v1 endpoints.
     #[derive(utoipa::OpenApi)]
     #[openapi(paths(
         users::list_users,
@@ -56,9 +59,10 @@ pub mod v1 {
         users::get_user,
         users::delete_user
     ))]
-    pub struct ApiDoc;
+    pub(super) struct ApiDoc;
 
-    pub fn router() -> routing::Router<Arc<core::Labman>> {
+    /// Get the router for the v1 API.
+    pub(super) fn router() -> routing::Router<Arc<core::Labman>> {
         routing::Router::new().merge(users::router())
     }
 }

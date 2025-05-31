@@ -1,6 +1,5 @@
 use deadpool_diesel::sqlite::{Manager, Pool, Runtime};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
-use std::error::Error;
 
 pub mod models;
 pub mod user;
@@ -15,7 +14,7 @@ pub struct Labman {
 }
 
 impl Labman {
-    pub async fn new(database_url: &str) -> Result<Self, Box<dyn Error + Send + Sync>> {
+    pub async fn new(database_url: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let manager = Manager::new(database_url, Runtime::Tokio1);
         let pool = Pool::builder(manager).build().unwrap();
 
