@@ -3,3 +3,8 @@ resolver = "3"
 members = [
     "server"
 ]
+
+[workspace.package]
+authors = ["Jonas Ehrlich <jonas.ehrlichl@gmail.com>"]
+repository = "https://github.com/jonasehrlich/labman"
+description = "Labman, a laboratory management system"
