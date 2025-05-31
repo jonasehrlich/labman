@@ -57,7 +57,6 @@ async fn get_user(
 #[utoipa::path(
     post,
     path = "/users",
-
     description = "Create a user",
     responses(
         (status = OK, description = "Success", body = core::models::User),
