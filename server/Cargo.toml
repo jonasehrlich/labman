@@ -4,11 +4,22 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.98"
 axum = "0.8.4"
 axum-login = "0.17.0"
 clap = { version = "4.5.39", features = ["derive"] }
 dotenvy = "0.15"
-sea-orm = { version = "1.1.12", features = ["sqlx-sqlite", "sqlx-postgres", "with-time", "runtime-tokio-native-tls"] }
+sea-orm = { version = "1.1.12", features = [
+    "sqlx-sqlite",
+    "sqlx-postgres",
+    "runtime-tokio-rustls",
+] }
+sea-orm-migration = { version = "1.1.12", features = [
+    "sqlx-postgres",
+    "sqlx-sqlite",
+    "runtime-tokio-rustls",
+    "with-chrono",
+] }
 serde = "1.0.219"
 strum = "0.27.1"
 strum_macros = "0.27.1"
@@ -16,3 +27,4 @@ tokio = { version = "1.45.1", features = ["full"] }
 utoipa = { version = "5.3.1", features = ["axum_extras"] }
 utoipa-axum = { version = "0.2.0" }
 utoipa-rapidoc = { version = "6.0.0", features = ["axum"] }
+migration = { path = "./migration" }

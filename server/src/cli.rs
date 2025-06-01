@@ -1,13 +1,12 @@
-use crate::core::{Labman, models};
-use strum::IntoEnumIterator;
+use crate::core::{Labman, entity};
+use sea_orm::Iterable;
 
-fn print_users<I, E>(users: I) -> Result<(), E>
+fn print_users<I>(users: I)
 where
-    I: IntoIterator<Item = Result<models::User, E>>,
-    E: std::fmt::Display,
+    I: IntoIterator<Item = entity::user::Model>,
 {
     // Find the maximum width of the UserRole variants
-    let max_role_width = models::UserRole::iter()
+    let max_role_width = entity::user::UserRole::iter()
         .map(|role| format!("{:?}", role).len() + 2)
         .max()
         .unwrap_or(10);
@@ -16,39 +15,32 @@ where
     println!("{:-<20}-+-{:-<max_role_width$}", "", "");
 
     for user in users {
-        match user {
-            Ok(user) => {
-                println!(
-                    "{:<20} | {:<max_role_width$}",
-                    user.name,
-                    format!("{:?}", user.role),
-                );
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        }
+        println!(
+            "{:<20} | {:<max_role_width$}",
+            user.name,
+            format!("{:?}", user.role),
+        )
     }
-    Ok(())
 }
 
 /// Create a user and print it
-pub async fn create_user(labman: &Labman, name: &str, role: &models::UserRole) {
-    let user = labman.user().create(name, role).await;
-    if let Err(e) = print_users(std::iter::once(user)) {
-        eprintln!("Error: {}", e);
-        std::process::exit(1);
+pub async fn create_user(labman: &Labman, name: &str, role: &entity::user::UserRole) {
+    match labman.user().create(name, role).await {
+        Ok(user) => {
+            print_users(std::iter::once(user));
+        }
+        Err(e) => {
+            eprintln!("Error creating user '{}': {}", name, e);
+            std::process::exit(1);
+        }
     }
 }
 
 /// Print users with a minimum role
-pub async fn list_users(labman: &Labman, min_role: &models::UserRole) {
-    match labman.user().iter(min_role).await {
+pub async fn list_users(labman: &Labman, min_role: &entity::user::UserRole) {
+    match labman.user().list(min_role).await {
         Ok(users) => {
-            if let Err(e) = print_users(users) {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            }
+            print_users(users);
         }
         Err(e) => {
             println!("Error listing users: {}", e)
@@ -65,12 +57,16 @@ pub async fn delete_user(labman: &Labman, name: &String) {
             eprintln!("Error getting user '{}': {}", name, e);
             std::process::exit(1);
         }
-        Ok(user) => {
+        Ok(Some(user)) => {
             user_manager.delete(user.id).await.unwrap_or_else(|e| {
                 eprintln!("Error deleting user '{}': {}", name, e);
                 std::process::exit(1);
             });
             println!("User '{}' deleted successfully.", name);
+        }
+        Ok(None) => {
+            eprintln!("User '{}' not found.", name);
+            std::process::exit(1);
         }
     }
 }

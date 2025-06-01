@@ -7,14 +7,14 @@ pub use app::App;
 mod api;
 mod app;
 
-/// Utility function for mapping boxed errors into a `500 Internal Server Error`
+/// Utility function for mapping errors into a `500 Internal Server Error`
 /// response.
-fn internal_error(err: Box<dyn std::error::Error>) -> http::StatusCode {
+fn internal_error(err: anyhow::Error) -> http::StatusCode {
     eprintln!("Internal server error: {}", err);
     http::StatusCode::INTERNAL_SERVER_ERROR
 }
 
-fn not_found(err: Box<dyn std::error::Error>) -> http::StatusCode {
+fn not_found(err: anyhow::Error) -> http::StatusCode {
     eprintln!("Not found: {}", err);
     http::StatusCode::NOT_FOUND
 }

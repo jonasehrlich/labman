@@ -1,114 +1,74 @@
-use crate::core::models;
-use crate::core::schema;
-use deadpool_diesel::sqlite::Pool;
-use diesel::prelude::*;
+use crate::core::entity;
+use sea_orm::*;
 
 pub struct UserManager<'a> {
-    pool: &'a Pool,
+    db: &'a DatabaseConnection,
 }
 
 impl<'a> UserManager<'a> {
-    pub fn new(pool: &'a Pool) -> Self {
-        UserManager { pool }
+    pub fn new(db: &'a sea_orm::DatabaseConnection) -> Self {
+        UserManager { db }
     }
 
     /// Create a user in the database
     pub async fn create(
         &self,
         name: &str,
-        role: &models::UserRole,
-    ) -> Result<models::User, Box<dyn std::error::Error>> {
-        use schema::users;
+        role: &entity::user::UserRole,
+    ) -> Result<entity::user::Model, anyhow::Error> {
+        let user = entity::user::ActiveModel {
+            name: Set(name.to_owned()),
+            role: Set(role.to_owned()),
+            ..Default::default() // all other attributes are `NotSet`
+        };
 
-        let name = name.to_string();
-        let role = *role;
-
-        let conn = self.pool.get().await?;
-        let res = conn
-            .interact(move |conn| {
-                let new_user = models::NewUser { name, role };
-                diesel::insert_into(users::table)
-                    .values(new_user)
-                    .returning(models::User::as_returning())
-                    .get_result(conn)
-            })
-            .await??;
-        Ok(res)
+        let user = entity::user::Entity::insert(user).exec(self.db).await?;
+        Ok(entity::user::Model {
+            id: user.last_insert_id,
+            name: name.to_owned(),
+            role: role.to_owned(),
+        })
     }
 
     /// Get a user by name
     pub async fn get_by_name(
         &self,
         name: &str,
-    ) -> Result<models::User, Box<dyn std::error::Error>> {
-        use schema::users;
-        let conn = self.pool.get().await?;
-
-        let name = name.to_string();
-        let res = conn
-            .interact(move |conn| {
-                users::table
-                    .filter(users::name.eq(&name))
-                    .select(models::User::as_select())
-                    .first(conn)
-            })
-            .await??;
-        Ok(res)
+    ) -> Result<Option<entity::user::Model>, anyhow::Error> {
+        let u: Option<entity::user::Model> = entity::user::Entity::find()
+            .filter(entity::user::Column::Name.eq(name))
+            .one(self.db)
+            .await?;
+        Ok(u)
     }
 
     /// Get a by ID
-    pub async fn get_by_id(&self, id: u32) -> Result<models::User, Box<dyn std::error::Error>> {
-        use schema::users;
-        let conn = self.pool.get().await?;
-
-        let res = conn
-            .interact(move |conn| {
-                users::table
-                    .filter(users::id.eq(id as i32))
-                    .select(models::User::as_select())
-                    .first(conn)
-            })
-            .await??;
-        Ok(res)
+    pub async fn get_by_id(&self, id: i32) -> Result<Option<entity::user::Model>, anyhow::Error> {
+        let u: Option<entity::user::Model> =
+            entity::user::Entity::find_by_id(id).one(self.db).await?;
+        Ok(u)
     }
 
     /// Get the users with a minimum role
-    pub async fn iter<'labman>(
-        &'labman self,
-        min_role: &'labman models::UserRole,
-    ) -> Result<
-        impl Iterator<Item = Result<models::User, Box<dyn std::error::Error>>> + 'labman,
-        Box<dyn std::error::Error>,
-    > {
-        use schema::users;
-        let conn = self.pool.get().await?;
-        let min_role = *min_role;
-        let res = conn
-            .interact(move |conn| {
-                users::table
-                    .filter(users::role.ge(min_role))
-                    .select(models::User::as_select())
-                    .load::<models::User>(conn)
-            })
-            .await??;
-        Ok(res.into_iter().map(Ok))
+    pub async fn list(
+        &self,
+        min_role: &entity::user::UserRole,
+    ) -> Result<Vec<entity::user::Model>, anyhow::Error> {
+        let users = entity::user::Entity::find()
+            .filter(entity::user::Column::Role.gte(min_role.to_owned()))
+            .all(self.db)
+            .await?;
+        Ok(users)
     }
 
-    pub async fn delete(&self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
-        use schema::users;
-        let conn = self.pool.get().await?;
-
-        let rows_affected = conn
-            .interact(move |conn| {
-                diesel::delete(users::table)
-                    .filter(users::id.eq(id))
-                    .execute(conn)
-            })
-            .await??;
-
-        if rows_affected == 0 {
-            return Err("User not found".into());
+    pub async fn delete(&self, id: i32) -> Result<(), anyhow::Error> {
+        match entity::user::Entity::delete_by_id(id)
+            .exec(self.db)
+            .await?
+            .rows_affected
+        {
+            1 => Ok(()),
+            _ => Err(sea_orm::DbErr::RecordNotFound(format!("No record with id {}", id)).into()),
         }
-        Ok(())
     }
 }

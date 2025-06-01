@@ -1,7 +1,8 @@
 [workspace]
 resolver = "3"
 members = [
-    "server"
+    "server",
+    "server/migration"
 ]
 
 [workspace.package]

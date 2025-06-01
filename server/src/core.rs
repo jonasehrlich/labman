@@ -1,33 +1,21 @@
-use deadpool_diesel::sqlite::{Manager, Pool, Runtime};
-use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
-
-pub mod models;
+pub mod entity;
 pub mod user;
-
-mod schema;
-
-const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+use sea_orm_migration::MigratorTrait;
 
 pub struct Labman {
-    // TODO: Make more generic for other databases
-    pool: Pool,
+    db: sea_orm::DatabaseConnection,
 }
 
 impl Labman {
     pub async fn new(database_url: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let manager = Manager::new(database_url, Runtime::Tokio1);
-        let pool = Pool::builder(manager).build().unwrap();
+        let db = sea_orm::Database::connect(database_url).await?;
+        // TODO: Apply migrations
+        migration::Migrator::up(&db, None).await?;
 
-        let conn = pool.get().await?;
-        conn.interact(|conn| conn.run_pending_migrations(MIGRATIONS).map(|_| ()))
-            .await
-            .unwrap()
-            .unwrap();
-
-        Ok(Labman { pool })
+        Ok(Labman { db })
     }
 
     pub fn user(&self) -> user::UserManager {
-        user::UserManager::new(&self.pool)
+        user::UserManager::new(&self.db)
     }
 }

@@ -21,14 +21,14 @@ enum Commands {
         name: String,
         /// Role of the user
         #[arg(value_enum, long, short = 'r', ignore_case = true)]
-        role: core::models::UserRole,
+        role: core::entity::user::UserRole,
     },
 
     /// List the available users
     ListUsers {
         /// Minimum role of the users to list
         #[arg(value_enum, default_value = "reporter", ignore_case = true)]
-        min_role: core::models::UserRole,
+        min_role: core::entity::user::UserRole,
     },
 
     /// Delete a user

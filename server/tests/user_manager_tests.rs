@@ -1,4 +1,4 @@
-use labman_server::core::models::UserRole;
+use labman_server::core::entity::user::UserRole;
 
 mod testing;
 
@@ -46,9 +46,10 @@ async fn can_get_user() {
     );
     let user = user_manager.get_by_name("carol").await;
     assert!(user.is_ok());
+
     assert!(
         user_manager
-            .get_by_id(user.unwrap().id as u32)
+            .get_by_id(user.unwrap().unwrap().id)
             .await
             .is_ok()
     );
@@ -57,8 +58,15 @@ async fn can_get_user() {
 #[tokio::test]
 async fn cannot_get_nonexistent_user() {
     let labman = testing::labman::in_memory().await;
-    assert!(labman.user().get_by_name("nonexistent").await.is_err());
-    assert!(labman.user().get_by_id(123).await.is_err());
+    assert!(
+        labman
+            .user()
+            .get_by_name("nonexistent")
+            .await
+            .unwrap()
+            .is_none()
+    );
+    assert!(labman.user().get_by_id(123).await.unwrap().is_none());
 }
 
 #[tokio::test]
@@ -91,5 +99,5 @@ async fn can_delete_user() {
         .unwrap();
     assert!(user_manager.delete(frank.id).await.is_ok());
     assert!(user_manager.delete(frank.id).await.is_err());
-    assert!(user_manager.get_by_id(frank.id as u32).await.is_err());
+    assert!(user_manager.get_by_id(frank.id).await.unwrap().is_none());
 }
